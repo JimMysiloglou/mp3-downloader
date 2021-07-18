@@ -6,6 +6,7 @@ from find_usb_mass_storage import find_removable_usb_storage
 from music_script import mp3_downloading, normalize_song
 import os
 import shutil
+from threading import Thread
 
 ADDRESS = 'https://www.youtube.com/playlist?list=PLirMc55Q2sfr2fwApCxY4vap0jbV9Ew0Q'
 
@@ -94,11 +95,15 @@ class DownloadApp():
 
         self.label5 = tk.Label(self.f2_3, font=self.nmfont, text='Εκκίνηση λήψεων', bg=self.rcolor, fg='white')
         self.label5.pack(pady=25)
-        self.start_button = tk.Button(self.f2_3, font=self.nmfont, text="Εκκίνηση", command=self.start_download)
+        self.start_button = tk.Button(self.f2_3, font=self.nmfont, text="Εκκίνηση", command=self.threading)
         self.start_button.pack()
 
         # Third frame
 
+
+    def threading(self):
+        t1 = Thread(target=self.start_download)
+        t1.start()
 
     def start_download(self):
         self.download_url = self.entry.get() if self.entry.get() else ADDRESS
