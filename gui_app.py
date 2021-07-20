@@ -7,40 +7,32 @@ from music_script import mp3_downloading, normalize_song
 import os
 import shutil
 from threading import Thread
+from logging import StreamHandler
 
 ADDRESS = 'https://www.youtube.com/playlist?list=PLirMc55Q2sfr2fwApCxY4vap0jbV9Ew0Q'
 
 usb_devices = find_removable_usb_storage()
 
-class MyLogger:
+
+class YTLogger():
+    def __init__(self, window, message) -> None:
+        self.window = window
+        self.message = message
+
     def debug(self, msg):
         print(msg)
+        self.message.set(msg)
+        
 
     def warning(self, msg):
         print(msg)
+        self.message.set(msg)
 
     def error(self, msg):
         print(msg)
+        self.message.set(msg)
+  
 
-
-def my_hook(d):
-    if d['status'] == 'finished':
-        print('Done downloading, now converting ...')
-
-ydl_opts = {
-    'format': 'bestaudio/best',
-    'postprocessors': [{
-        'key': 'FFmpegExtractAudio',
-        'preferredcodec': 'mp3',
-        'preferredquality': '192',
-    },
-    {    'key': 'FFmpegMetadata'},
-],
-    'logger': MyLogger(),
-    'progress_hooks': [my_hook],
-    'nooverwrites': True,
-    'simulate': False,
-}
 
 class DownloadApp():
     def __init__(self, root) -> None:
@@ -52,8 +44,8 @@ class DownloadApp():
         self.efont = font.Font(family='Aria', size=18)
         self.nmfont = font.Font(family='Arial', size=15)
         self.rcolor = '#d40606'
-        self.usb_var = tk.StringVar(self.root)
-        self.usb_var.set('Διάλεξε USB')
+        self.usb_var = tk.StringVar(self.root, value='Διάλεξε USB')
+        self.progressmsg = tk.StringVar(self.root)
         self.widgets()
 
     def widgets(self):
@@ -99,6 +91,8 @@ class DownloadApp():
         self.start_button.pack()
 
         # Third frame
+        self.label6 = tk.Label(self.f3, font=self.nmfont, textvariable=self.progressmsg, width=100)
+        self.label6.pack()
 
 
     def threading(self):
@@ -108,22 +102,46 @@ class DownloadApp():
     def start_download(self):
         self.download_url = self.entry.get() if self.entry.get() else ADDRESS
         self.usb_path = usb_devices[self.usb_var.get()]
+        self.log = Log(self.f3, self.progressmsg)
+        ydl_opts = {
+            'format': 'bestaudio/best',
+            'postprocessors': [{
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'mp3',
+                'preferredquality': '192',
+            },
+            {    'key': 'FFmpegMetadata'},
+        ],
+            'logger': YTLogger(self.f3, self.progressmsg),
+            'progress_hooks': [self.log.my_hook],
+            'nooverwrites': True,
+            'simulate': False,
+            'outtmpl': '%(title)s.%(ext)s',
+        }
         mp3_downloading(self.download_url, ydl_opts)
         songs = os.listdir('./')
         for file in songs:
-            print(file)
+            self.progressmsg.set(f'Normalizing: {file}')
             normalize_song(file)
             os.remove(file)
         normalized_songs = os.listdir('./')
         for file in normalized_songs:
-            print(file)
+            self.progressmsg.set('Moving songs')
             shutil.move(file, os.path.join(self.usb_path, file))
+        self.progressmsg.set('Διαδικασία Ολοκληρώθηκε')
 
-        
+class Log():
+    def __init__(self, window, message) -> None:
+        self.window = window
+        self.message = message
 
-        
-        
-
+    def error(self, msg):
+        self.message.set(msg)
+    
+    def my_hook(self, d):
+            if d['status'] == 'finished':
+                print('Done downloading, now converting ...')
+                self.message.set('Done downloading, now converting ...')   
 
 
 

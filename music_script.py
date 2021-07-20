@@ -14,7 +14,6 @@ def mp3_downloading(url, ydl_opts):
 
 
 def normalize_song(file):
-    print('Normalizing: ', file)
     rawsound = AudioSegment.from_file(file)
     normalizedsound = effects.normalize(rawsound)
     name = file.rsplit('.')[0]
