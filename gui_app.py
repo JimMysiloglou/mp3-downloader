@@ -1,25 +1,29 @@
 import tkinter as tk
 import tkinter.ttk as ttk
 import tkinter.font as font
+from typing import Pattern
 from PIL import ImageTk, Image
 from find_usb_mass_storage import find_removable_usb_storage
 from music_script import mp3_downloading, normalize_song
 import os
 import shutil
 from threading import Thread
-from logging import StreamHandler
+import re
 
 ADDRESS = 'https://www.youtube.com/playlist?list=PLirMc55Q2sfr2fwApCxY4vap0jbV9Ew0Q'
 
 usb_devices = find_removable_usb_storage()
-
+pattern = re.compile(r'(\d+.\d+)%')
 
 class YTLogger():
-    def __init__(self, window, message) -> None:
+    def __init__(self, window, message, bar) -> None:
         self.window = window
         self.message = message
+        self.bar = bar
 
     def debug(self, msg):
+        progress = pattern.search(msg)
+        if progress: self.bar['value'] = progress.groups()[0]
         print(msg)
         self.message.set(msg)
         
@@ -91,6 +95,8 @@ class DownloadApp():
         self.start_button.pack()
 
         # Third frame
+        self.progressbar = ttk.Progressbar(self.f3, orient='horizontal', length=300, mode='determinate')
+        self.progressbar.pack(pady=10)
         self.label6 = tk.Label(self.f3, font=self.nmfont, textvariable=self.progressmsg, width=100)
         self.label6.pack()
 
@@ -101,7 +107,7 @@ class DownloadApp():
 
     def start_download(self):
         self.download_url = self.entry.get() if self.entry.get() else ADDRESS
-        self.usb_path = usb_devices[self.usb_var.get()]
+        self.usb_path = usb_devices.get(self.usb_var.get(), False)
         self.log = Log(self.f3, self.progressmsg)
         ydl_opts = {
             'format': 'bestaudio/best',
@@ -112,7 +118,7 @@ class DownloadApp():
             },
             {    'key': 'FFmpegMetadata'},
         ],
-            'logger': YTLogger(self.f3, self.progressmsg),
+            'logger': YTLogger(self.f3, self.progressmsg, self.progressbar),
             'progress_hooks': [self.log.my_hook],
             'nooverwrites': True,
             'simulate': False,
@@ -120,14 +126,19 @@ class DownloadApp():
         }
         mp3_downloading(self.download_url, ydl_opts)
         songs = os.listdir('./')
-        for file in songs:
+        max_value = len(songs)
+        for i, file in enumerate(songs, 1):
             self.progressmsg.set(f'Normalizing: {file}')
+            self.progressbar['value'] = (i / max_value)* 100
             normalize_song(file)
             os.remove(file)
-        normalized_songs = os.listdir('./')
-        for file in normalized_songs:
+        if self.usb_path:
+            normalized_songs = os.listdir('./')
             self.progressmsg.set('Moving songs')
-            shutil.move(file, os.path.join(self.usb_path, file))
+            max_value = len(normalized_songs)
+            for i, file in enumerate(normalized_songs, 1):
+                self.progressbar['value'] = (i / max_value) * 100
+                shutil.move(file, os.path.join(self.usb_path, file))
         self.progressmsg.set('Διαδικασία Ολοκληρώθηκε')
 
 class Log():

@@ -12,5 +12,5 @@ def find_removable_usb_storage():
             if p.device in partitions:
                 usb_devices[p.device] = p.mountpoint
     if not usb_devices:
-        return {'No usb insterted': 'No usb inserted'}
+        return {'No usb insterted': ''}
     return usb_devices
