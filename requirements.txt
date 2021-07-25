@@ -1,0 +1,6 @@
+Pillow==8.3.1
+psutil==5.8.0
+pydub==0.25.1
+pyudev==0.22.0
+tk==0.1.0
+youtube-dl==2021.6.6
