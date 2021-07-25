@@ -14,6 +14,8 @@ def yt_downloader(url, ydl_opts):
     Downloads folder.
     '''
     with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+        if not os.path.exists('Downloads'):
+            os.makedirs('Downloads')
         os.chdir('./Downloads')
         ydl.download([url])
 
