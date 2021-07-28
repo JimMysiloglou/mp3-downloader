@@ -3,7 +3,7 @@ import tkinter.ttk as ttk
 import tkinter.font as font
 from PIL import ImageTk, Image
 from find_usb_mass_storage import find_removable_usb_storage
-from downloading_normalizing_script import yt_downloader, normalize_sound
+from sound_process_script import sound_process, yt_downloader
 import os
 import shutil
 from threading import Thread
@@ -165,7 +165,7 @@ class Gui():
         for i, file in enumerate(files, 1):
             self.progressmsg.set(f'Normalizing: {file}')
             self.progressbar['value'] = (i / max_value)* 100
-            normalize_sound(file)
+            sound_process(file)
             os.remove(file)
         
         # Moving the files to usb drive if we inserted one
