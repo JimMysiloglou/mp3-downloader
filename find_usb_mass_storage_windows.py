@@ -11,4 +11,6 @@ def find_removable_usb_storage():
             t = win32file.GetDriveType(drname)
             if t == win32file.DRIVE_REMOVABLE:
                 usb_devices[chr(ord('A') + d)] =  drname
+    if not usb_devices:
+        return {'No usb inserted': ''}
     return usb_devices
