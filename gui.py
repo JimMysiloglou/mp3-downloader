@@ -2,13 +2,17 @@ import tkinter as tk
 import tkinter.ttk as ttk
 import tkinter.font as font
 from PIL import ImageTk, Image
-from find_usb_mass_storage import find_removable_usb_storage
 from sound_process_script import sound_process, yt_downloader
 import os
 import shutil
 from threading import Thread
 import re
 import configparser
+
+if os.name == 'nt':
+    from find_usb_mass_storage_windows import find_removable_usb_storage
+else:
+    from find_usb_mass_storage_linux import find_removable_usb_storage
 
 
 # My default download url
@@ -188,7 +192,7 @@ def start():
     root = tk.Tk()
     root.title('Youtube Λήψεις')
     root.geometry('750x450')
-    root.resizable(False, False)
+    root.resizable(False, False)   
     usb_drives = find_removable_usb_storage()
     Gui(root, usb_drives)
     root.mainloop()
