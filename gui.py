@@ -9,6 +9,8 @@ from threading import Thread
 import re
 import configparser
 
+ROOT_DIR = os.path.realpath(os.path.join(os.path.dirname(__file__)))
+
 if os.name == 'nt':
     from find_usb_mass_storage_windows import find_removable_usb_storage
 else:
@@ -17,7 +19,7 @@ else:
 
 # My default download url
 config = configparser.ConfigParser()
-config.read('playlist_address.ini')
+config.read(os.path.join(ROOT_DIR, 'playlist_address.ini'))
 ADDRESS = config.get('DEFAULT', 'playlist_address')
 
 # Finding downloading progress from youtube-dl with regex
@@ -95,7 +97,7 @@ class Gui:
 
     def first_frame_widgets(self):
         """Youtube icon and title"""
-        self.image = Image.open('./youtube.png')
+        self.image = Image.open(os.path.join(ROOT_DIR, 'youtube.png'))
         self.ytlogo = ImageTk.PhotoImage(self.image)
 
         self.label1 = tk.Label(self.f1, image=self.ytlogo)
