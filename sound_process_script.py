@@ -17,7 +17,11 @@ def yt_downloader(url, ydl_opts):
         downloads_path = os.path.join(ROOT_DIR, 'Downloads')
         if not os.path.exists(downloads_path):
             os.makedirs(downloads_path)
-        os.chdir(downloads_path)
+        else:
+            files = os.listdir(downloads_path)
+            for file in files:
+                os.remove(file)
+            os.chdir(downloads_path)
         ydl.download([url])
 
 

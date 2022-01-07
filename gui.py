@@ -197,6 +197,7 @@ class Gui:
             'nooverwrites': True,
             'simulate': False,
             'outtmpl': '%(title)s.%(ext)s',
+            'ignoreerrors': True,
         }
 
         # Starting download and converting to mp3
