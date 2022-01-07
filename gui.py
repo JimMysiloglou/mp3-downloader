@@ -60,8 +60,8 @@ class Log:
     
     def my_hook(self, d):
         if d['status'] == 'finished':
-            print('Τέλος λήψεων, αρχή μετατροπής ...')
-            self.message.set('Τέλος λήψεων, αρχή μετατροπής ...')
+            print('Τέλος λήψης, μετατροπή ...')
+            self.message.set('Τέλος λήψης, μετατροπή ...')
 
 
 class Gui:
