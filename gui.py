@@ -67,9 +67,9 @@ class Log:
 class Gui:
     """Class that creates the GUI"""
 
-    def __init__(self, root, usb_drives) -> None:
+    def __init__(self, root):
         self.root = root
-        self.usb_drives = usb_drives
+        self.usb_drives = find_removable_usb_storage()
         self.titlefont = font.Font(family='Arial Bold', size=27)
         self.urlfont = font.Font(family='Arial', size=18)
         self.normalfont = font.Font(family='Arial', size=15)
@@ -116,7 +116,8 @@ class Gui:
 
         self.label4 = tk.Label(self.f2_2, font=self.normalfont, text='USB στικάκι', bg=self.redcolor, fg='white')
         self.label4.pack(pady=25)
-        self.option_menu = tk.OptionMenu(self.f2_2, self.usb_variable, *self.usb_drives.keys())
+        self.option_menu = tk.OptionMenu(self.f2_2, self.usb_variable, *self.usb_drives.keys(),
+                                         command=self.create_clear_button)
         self.option_menu.pack()
 
         self.label5 = tk.Label(self.f2_3, font=self.normalfont, text='Εκκίνηση λήψεων', bg=self.redcolor, fg='white')
@@ -130,6 +131,24 @@ class Gui:
         self.progressbar.pack(pady=10)
         self.label6 = tk.Label(self.f3, font=self.normalfont, textvariable=self.progressmsg, width=100)
         self.label6.pack()
+
+    def create_clear_button(self, usb_selected):
+        if usb_selected != 'No usb inserted' and not hasattr(self, 'clear_button'):
+            self.usb_path = self.usb_drives.get(self.usb_variable.get(), False)
+            self.clear_button = tk.Button(self.f2_2, font=self.normalfont, text="Διαγραφή", command=self.clear_usb)
+            self.clear_button.pack(expand=True)
+
+    def clear_usb(self):
+        for filename in os.listdir(self.usb_path):
+            file_path = os.path.join(self.usb_path, filename)
+            try:
+                if os.path.isfile(file_path) or os.path.islink(file_path):
+                    os.unlink(file_path)
+                elif os.path.isdir(file_path):
+                    shutil.rmtree(file_path)
+            except Exception as e:
+                print('Failed to delete %s. Reason: %s' % (file_path, e))
+        self.progressmsg.set('Διαγράφηκε')
 
     def threading(self):
         """Our download script runs in a different thread than the gui"""
@@ -194,9 +213,8 @@ def start():
     root = tk.Tk()
     root.title('Youtube Λήψεις')
     root.geometry('750x450')
-    root.resizable(False, False)   
-    usb_drives = find_removable_usb_storage()
-    Gui(root, usb_drives)
+    root.resizable(False, False)
+    Gui(root)
     root.mainloop()
 
 
