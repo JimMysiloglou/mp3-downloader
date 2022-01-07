@@ -3,6 +3,7 @@ import youtube_dl
 import os
 from pydub import AudioSegment, effects
 from pydub.utils import mediainfo  # Transferring tags to normalized file
+import shutil
 
 ROOT_DIR = os.path.realpath(os.path.join(os.path.dirname(__file__)))
 
@@ -18,9 +19,15 @@ def yt_downloader(url, ydl_opts):
         if not os.path.exists(downloads_path):
             os.makedirs(downloads_path)
         else:
-            files = os.listdir(downloads_path)
-            for file in files:
-                os.remove(file)
+            for filename in os.listdir(downloads_path):
+                file_path = os.path.join(downloads_path, filename)
+                try:
+                    if os.path.isfile(file_path) or os.path.islink(file_path):
+                        os.unlink(file_path)
+                    elif os.path.isdir(file_path):
+                        shutil.rmtree(file_path)
+                except Exception as e:
+                    print('Failed to delete %s. Reason: %s' % (file_path, e))
             os.chdir(downloads_path)
         ydl.download([url])
 
