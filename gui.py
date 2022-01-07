@@ -28,7 +28,7 @@ pattern = re.compile(r'(\d+.\d+)%')
 
 class YTLogger:
     """Custom logging class used in youtube_dl by yt_downloader function"""
-    def __init__(self, window, message, bar) -> None:
+    def __init__(self, window, message, bar):
         self.window = window
         self.message = message
         self.bar = bar
@@ -60,8 +60,8 @@ class Log:
     
     def my_hook(self, d):
         if d['status'] == 'finished':
-            print('Done downloading, now converting ...')
-            self.message.set('Done downloading, now converting ...')
+            print('Τέλος λήψεων, αρχή μετατροπής ...')
+            self.message.set('Τέλος λήψεων, αρχή μετατροπής ...')
 
 
 class Gui:
@@ -114,11 +114,14 @@ class Gui:
         self.entry = tk.Entry(self.f2_1, font=self.urlfont, width=15)
         self.entry.pack()
 
+        self.refresh_button = tk.Button(self.f2_2, font=self.normalfont, text="Ανανέωση", command=self.refresh_usb)
+        self.refresh_button.pack(expand=True)
+
         self.label4 = tk.Label(self.f2_2, font=self.normalfont, text='USB στικάκι', bg=self.redcolor, fg='white')
-        self.label4.pack(pady=25)
+        self.label4.pack(pady=10)
         self.option_menu = tk.OptionMenu(self.f2_2, self.usb_variable, *self.usb_drives.keys(),
                                          command=self.create_clear_button)
-        self.option_menu.pack()
+        self.option_menu.pack(expand=True)
 
         self.label5 = tk.Label(self.f2_3, font=self.normalfont, text='Εκκίνηση λήψεων', bg=self.redcolor, fg='white')
         self.label5.pack(pady=25)
@@ -132,13 +135,25 @@ class Gui:
         self.label6 = tk.Label(self.f3, font=self.normalfont, textvariable=self.progressmsg, width=100)
         self.label6.pack()
 
+    def refresh_usb(self):
+        """Check again if usb inserted"""
+        if hasattr(self, 'clear_button'): self.clear_button.pack_forget()
+        self.usb_drives = find_removable_usb_storage()
+        self.usb_variable.set('Διάλεξε USB')
+        menu = self.option_menu['menu']
+        menu.delete(0, 'end')
+        for usb in self.usb_drives.keys():
+            menu.add_command(label=usb, command=lambda: [self.usb_variable.set(usb), self.create_clear_button(usb)])
+
     def create_clear_button(self, usb_selected):
+        """Create a delete usb button if usb chosen"""
         if usb_selected != 'No usb inserted' and not hasattr(self, 'clear_button'):
             self.usb_path = self.usb_drives.get(self.usb_variable.get(), False)
             self.clear_button = tk.Button(self.f2_2, font=self.normalfont, text="Διαγραφή", command=self.clear_usb)
             self.clear_button.pack(expand=True)
 
     def clear_usb(self):
+        """Delete all files from the chosen usb"""
         for filename in os.listdir(self.usb_path):
             file_path = os.path.join(self.usb_path, filename)
             try:
@@ -188,20 +203,20 @@ class Gui:
         yt_downloader(self.download_url, ydl_opts)
 
         # A list of our files
-        files = os.listdir('./')
+        files = os.listdir(os.path.join(ROOT_DIR, 'Downloads'))
         max_value = len(files)
 
         # Normalizing our files removing original and inform user
         for i, file in enumerate(files, 1):
-            self.progressmsg.set(f'Normalizing: {file}')
+            self.progressmsg.set(f'Ομαλοποιηση ήχου: {file}')
             self.progressbar['value'] = (i / max_value) * 100
             sound_process(file)
             os.remove(file)
 
         # Moving the files to usb drive if we inserted one
         if self.usb_path:
-            normalized_files = os.listdir('./')
-            self.progressmsg.set('Moving songs')
+            normalized_files = os.listdir(os.path.join(ROOT_DIR, 'Downloads'))
+            self.progressmsg.set('Μετακίνηση κομματιών')
             max_value = len(normalized_files)
             for i, file in enumerate(normalized_files, 1):
                 self.progressbar['value'] = (i / max_value) * 100

@@ -4,6 +4,7 @@ import os
 from pydub import AudioSegment, effects
 from pydub.utils import mediainfo  # Transferring tags to normalized file
 
+ROOT_DIR = os.path.realpath(os.path.join(os.path.dirname(__file__)))
 
 def yt_downloader(url, ydl_opts):
     """
@@ -13,9 +14,10 @@ def yt_downloader(url, ydl_opts):
     """
 
     with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-        if not os.path.exists('Downloads'):
-            os.makedirs('Downloads')
-        os.chdir('./Downloads')
+        downloads_path = os.path.join(ROOT_DIR, 'Downloads')
+        if not os.path.exists(downloads_path):
+            os.makedirs(downloads_path)
+        os.chdir(downloads_path)
         ydl.download([url])
 
 
