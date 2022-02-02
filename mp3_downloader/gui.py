@@ -1,4 +1,5 @@
 import tkinter as tk
+import tkinter.ttk as ttk
 import tkinter.font as font
 from PIL import ImageTk, Image
 import os
@@ -29,23 +30,42 @@ try:
 except FileNotFoundError:
     raise FileNotFoundError("File options.json not found!")
 
-class Log:
-    """Second logging class for youtube_dl"""
-    uid = 0
 
-    def __init__(self):
-        Log.uid += 1
-        self.uid = Log.uid
+class Progress:
+    """Second logging class for youtube_dl"""
+
+    def __init__(self, window):
         self.filename = None
+        self.progressmsg = tk.StringVar(window)
+        self.progress = tk.Label(window, textvariable=self.progressmsg, width=100)
+        self.progress.pack()
+        self.progressbar = ttk.Progressbar(window, orient='horizontal', length=300, mode='determinate')
+        self.progressbar.pack()
+
+    def debug(self, msg):
+        pass
+        # print('Debug: ', msg)
+
+    def warning(self, msg):
+        print('Warning: ', msg)
 
     def error(self, msg):
-        print(msg)
+        print('Error: ', msg)
+        self.progressmsg.set(f"Error: {msg}")
 
     def my_hook(self, d):
         if d['status'] == 'downloading':
-            print(self.uid, f"{d['filename']} eta: {d['_eta_str']}, percent: {d['_percent_str']}, speed: {d['_speed_str']}")
+            # downloading info
+            print(f"{d['filename']} eta: {d['_eta_str']}, percent: {d['_percent_str']}, speed: {d['_speed_str']}")
+            self.progressmsg.set(f"{d['filename']:25}, eta: {d['_eta_str']}, speed: {d['_speed_str']}")
+
+            # progress bar
+            progress = float(d['_percent_str'].strip('%'))
+            self.progressbar['value'] = progress
+
         elif d['status'] == 'finished':
             self.filename = d['filename']
+            self.progressmsg.set(f"{d['filename']:25} finished downloading")
 
 
 
@@ -55,9 +75,9 @@ class Gui:
     def __init__(self, root):
         self.root = root
         self.usb_drives = find_removable_usb_storage()
-        self.titlefont = font.Font(size=27)
-        self.urlfont = font.Font(size=18)
-        self.normalfont = font.Font(size=15)
+        self.titlefont = font.Font(family='Courier New Greek', size=27)
+        self.urlfont = font.Font(family='Courier New Greek', size=18)
+        self.normalfont = font.Font(family='Courier New Greek', size=15)
         self.redcolor = '#d40606'
         self.usb_variable = tk.StringVar(self.root, value='Διάλεξε USB')
         self.create_frames()
@@ -143,14 +163,14 @@ class Gui:
 
 
     def download_procedure(self, url):
-
         # create custom log
         options = YDL_OPTIONS.copy()
-        log = Log()
+        log = Progress(self.info_window)
         options['progress_hooks'] = [log.my_hook]
 
         # start download and postprocess to mp3
-        ydl = YoutubeDownload(url, options)
+        logger = log
+        ydl = YoutubeDownload(url, options, logger)
         ydl.run()
 
         # sound processing of the file and removal of the original
@@ -169,22 +189,26 @@ class Gui:
 
     def start_downloaders(self, urls):
         with concurrent.futures.ThreadPoolExecutor(max_workers=WORKERS) as executor:
-            ydl_futures = []
-            for url in urls:
-                future = executor.submit(self.download_procedure, url)
-                ydl_futures.append(future)
-            for future in concurrent.futures.as_completed(ydl_futures):
-                print('Task ended...')
+            future_downloads = {executor.submit(self.download_procedure, url): url for url in urls}
+            for future in concurrent.futures.as_completed(future_downloads):
+                url = future_downloads[future]
                 try:
-                    pass
+                    data = future.result()
                 except Exception as exc:
-                    print('%r generated an exception: %s' % exc)
+                    print('%r generated an exception: %s' % (url, exc))
+            executor.shutdown()
 
 
+    def create_info_window(self):
+        # create new window
+        self.info_window = tk.Toplevel(self.root)
+        self.info_window.title("Downloads")
+        self.info_window.geometry("500x500")
 
 
     def downloading(self):
         """Prepare for downloading and open thread for ydl"""
+
         # prepare downloads folder
         prepare_download(ROOT_DIR)
         # Getting the usb drive mount path otherwise False
@@ -198,6 +222,10 @@ class Gui:
             print("Done, downloading list")
             song_urls = [entry["url"] for entry in songs["entries"]]
         os.chdir(os.path.join(ROOT_DIR, 'Downloads'))
+
+        self.create_info_window()
+
+        # loading threads for download
         thread = Thread(target=self.start_downloaders, kwargs={'urls': song_urls})
         thread.start()
 

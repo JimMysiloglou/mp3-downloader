@@ -1,5 +1,5 @@
 {
-  "playlist_address": "https://www.youtube.com/playlist?list=PLWR5-QvCIhlUrLlYAaa_Y0bx4FwDWp6bw",
+  "playlist_address": "put your default playlist here",
   "workers": 5,
   "ydl_opts": {
     "format": "bestaudio/best",
