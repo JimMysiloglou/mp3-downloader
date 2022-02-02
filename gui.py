@@ -97,7 +97,7 @@ class Gui:
 
     def first_frame_widgets(self):
         """Youtube icon and title"""
-        self.image = Image.open(os.path.join(ROOT_DIR, 'youtube.png'))
+        self.image = Image.open(os.path.join(ROOT_DIR, 'play_icon.png'))
         self.ytlogo = ImageTk.PhotoImage(self.image)
 
         self.label1 = tk.Label(self.f1, image=self.ytlogo)
