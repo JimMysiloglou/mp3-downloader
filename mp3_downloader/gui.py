@@ -1,6 +1,7 @@
 import tkinter as tk
 import tkinter.ttk as ttk
 import tkinter.font as font
+from tkinter import messagebox
 from PIL import ImageTk, Image
 import os
 import shutil
@@ -33,6 +34,8 @@ except FileNotFoundError:
 
 class Progress:
     """Second logging class for youtube_dl"""
+    downloads_count = 0
+    errors_count = 0
 
     def __init__(self, window):
         self.filename = None
@@ -52,6 +55,7 @@ class Progress:
     def error(self, msg):
         print('Error: ', msg)
         self.progressmsg.set(f"Error: {msg}")
+        Progress.errors_count += 1
 
     def my_hook(self, d):
         if d['status'] == 'downloading':
@@ -66,6 +70,7 @@ class Progress:
         elif d['status'] == 'finished':
             self.filename = d['filename']
             self.progressmsg.set(f"{d['filename']:25} finished downloading")
+            Progress.downloads_count += 1
 
 
 
@@ -85,6 +90,8 @@ class Gui:
         self.second_frame_widgets()
         self.download_url = ADDRESS
         self.usb_path = None
+        self.downloads_count = 0
+        self.errors_count = 0
 
     def create_frames(self):
         self.f1 = tk.Frame(self.root)
@@ -197,6 +204,10 @@ class Gui:
                 except Exception as exc:
                     print('%r generated an exception: %s' % (url, exc))
             executor.shutdown()
+        self.info_window.destroy()
+        self.finished_window = messagebox.showinfo("Λήψεις Ολοκληρώθηκαν", f"Downloads: {Progress.downloads_count} \nErrors: {Progress.errors_count}")
+
+
 
 
     def create_info_window(self):
